@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orrery Chatbot</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom scrollbar for a dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; /* dark gray */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563; /* medium gray */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* lighter gray */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-space-mono {
+            font-family: 'Space Mono', monospace;
+        }
+        #back-arrow {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-black text-gray-200 flex items-center justify-center min-h-screen">
+    <img id="back-arrow" src="https://img.icons8.com/ios-filled/50/000000/left.png" alt="Back" onclick="window.location.href='orrery.html'">
+
+    <!-- Main Chatbot Container -->
+    <div class="w-full max-w-2xl h-full md:h-[90vh] flex flex-col bg-gray-900 border border-gray-700 rounded-lg shadow-2xl shadow-gray-500/10 justify-center mx-auto">
+        <!-- Header -->
+        <header class="border-b border-gray-700 p-4 flex items-center justify-between rounded-t-lg">
+            <div class="flex items-center gap-4">
+                 <!-- Back Button -->
+                <button onclick="window.location.href='orrery.html'" class="p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </button>
+                <h1 class="text-xl font-bold font-space-mono">Orrery Chatbot</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
+                <span class="text-sm text-gray-400">Awaiting Command</span>
+            </div>
+        </header>
+
+        <!-- Chat Messages Area -->
+        <main id="chat-window" class="flex-1 p-6 overflow-y-auto space-y-6">
+            <!-- Initial bot message -->
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-cyan-400" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M21.9393 14.9393C20.0858 16.7929 17.1569 18 14 18C9.02944 18 5 13.9706 5 9C5 5.84315 6.20711 2.91421 8.06066 1.06066" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="group relative">
+                    <div class="bg-gray-800 text-gray-200 p-3 rounded-lg rounded-tl-none max-w-xs md:max-w-md border border-gray-700">
+                        <p id="bot-message-0">Greetings. I am the Orrery Chatbot, a conduit for astronomical knowledge and research. How may I assist your exploration of the cosmos today?</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Message Input Area -->
+        <footer class="border-t border-gray-700 p-4 bg-gray-900 rounded-b-lg">
+            <form id="chat-form" class="flex items-center gap-3">
+                <input 
+                    type="text" 
+                    id="message-input" 
+                    placeholder="Query the celestial database..." 
+                    class="flex-1 p-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-gray-800 text-gray-100 placeholder-gray-500"
+                    autocomplete="off"
+                >
+                <button 
+                    type="submit"
+                    id="send-button"
+                    class="bg-gray-200 text-black px-5 py-3 rounded-lg font-semibold hover:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </form>
+        </footer>
+    </div>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        let messageIdCounter = 1;
+
+        // Conversation history
+        let chatHistory = [
+            {
+                role: "user", // Gemini doesn't allow "system", so we use user
+                parts: [{ text: "You are the Orrery Chatbot, an expert AI assistant specializing in space, astronomy, astrophysics, and scientific research. Your purpose is to provide accurate, educational, and ethically-grounded information. Engage with users in a clear, informative, and slightly formal tone. Always prioritize scientific accuracy and safety. Do not invent information." }]
+            }
+        ];
+
+        chatForm.addEventListener('submit', handleSendMessage);
+
+        async function handleSendMessage(e) {
+            e.preventDefault();
+            const userMessage = messageInput.value.trim();
+            if (!userMessage) return;
+
+            addMessage(userMessage, 'user');
+            chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
+
+            messageInput.value = '';
+            toggleForm(false);
+
+            showTypingIndicator();
+            try {
+                const botResponse = await callGeminiAPI();
+                removeTypingIndicator();
+                addMessage(botResponse, 'bot');
+                chatHistory.push({ role: "model", parts: [{ text: botResponse }] });
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                removeTypingIndicator();
+                addMessage("My connection to the deep space network seems unstable. Please try again later.", 'bot-error');
+            } finally {
+                toggleForm(true);
+            }
+        }
+
+        function addMessage(message, sender) {
+            const messageElement = document.createElement('div');
+            
+            if (sender === 'user') {
+                messageElement.className = 'flex justify-end';
+                messageElement.innerHTML = `
+                    <div class="bg-gray-700 text-white p-3 rounded-lg rounded-br-none max-w-xs md:max-w-md">
+                        <p>${message.replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
+            } else {
+                const messageId = messageIdCounter++;
+                let avatar = `
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-cyan-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M21.9393 14.9393C20.0858 16.7929 17.1569 18 14 18C9.02944 18 5 13.9706 5 9C5 5.84315 6.20711 2.91421 8.06066 1.06066" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>`;
+                let messageBubbleClass = 'bg-gray-800 text-gray-200 border border-gray-700';
+                if (sender === 'bot-error') {
+                    avatar = `
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-900/50 border border-red-500/50 flex items-center justify-center">
+                         <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>`;
+                    messageBubbleClass = 'bg-red-900/50 text-red-300 border border-red-500/50';
+                }
+
+                messageElement.className = 'flex items-start gap-3';
+                messageElement.innerHTML = `
+                    ${avatar}
+                    <div class="group relative">
+                        <div class="${messageBubbleClass} p-3 rounded-lg rounded-tl-none max-w-xs md:max-w-md">
+                            <p id="bot-message-${messageId}">${message.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            chatWindow.appendChild(messageElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const typingElement = document.createElement('div');
+            typingElement.id = 'typing-indicator';
+            typingElement.className = 'flex items-start gap-3';
+            typingElement.innerHTML = `
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center">
+                     <svg class="w-6 h-6 text-cyan-400" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M21.9393 14.9393C20.0858 16.7929 17.1569 18 14 18C9.02944 18 5 13.9706 5 9C5 5.84315 6.20711 2.91421 8.06066 1.06066" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="bg-gray-800 border border-gray-700 p-3 rounded-lg rounded-tl-none">
+                    <div class="flex items-center space-x-1">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: -0.3s;"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: -0.15s;"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    </div>
+                </div>
+            `;
+            chatWindow.appendChild(typingElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) typingIndicator.remove();
+        }
+
+        function toggleForm(isEnabled) {
+            messageInput.disabled = !isEnabled;
+            sendButton.disabled = !isEnabled;
+            if (isEnabled) messageInput.focus();
+        }
+
+        async function callGeminiAPI() {
+            const apiKey = "AIzaSyBOquUzVhClj-ZX1P7P93wXVQnGgbfnRyc"; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            
+            const payload = { contents: chatHistory };
+
+            let response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+                throw new Error(`API call failed with status ${response.status}: ${errorBody}`);
+            }
+
+            const result = await response.json();
+            if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("Invalid response structure from API.");
+            }
+        }
+    </script>
+</body>
+</html>
+</body>
+</html>

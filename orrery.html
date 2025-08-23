@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Orrery with Real NEO Data</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+</head>
+<body>
+    <canvas id="orreryCanvas"></canvas>
+
+    <div class="info-panel">
+        <h1 id="info-name"></h1>
+        <p id="info-type"></p>
+        <p id="info-class"></p>
+        <p id="info-code"></p>
+        <p id="info-diameter"></p>
+        <p id="info-first-impact"></p>
+        <p id="info-impact-period"></p>
+        <p id="info-risk"></p>
+        <p id="info-vel"></p>
+        <p id="info-temp"></p>
+        <p id="info-grav"></p>
+        <p id="info-mass"></p>
+        <p id="info-obl"></p>
+        <p id="info-rotper"></p>
+        <h2>Orbital parameters:</h2>
+        <p id="info-a" style="padding-left: 20px;"></p>
+        <p id="info-e" style="padding-left: 20px;"></p>
+        <p id="info-inc" style="padding-left: 20px;"></p>
+        <p id="info-node" style="padding-left: 20px;"></p>
+        <p id="info-peri" style="padding-left: 20px;"></p>
+        <p id="info-ma" style="padding-left: 20px;"></p>
+        <p id="info-epoch" style="padding-left: 20px;"></p>
+    </div>
+
+    <!-- Top Center Buttons: Mini-Game -->
+    <!-- <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2202;">
+        <button id="mini-game-btn" class="top-btn">Mini-Game</button>
+    </div> -->
+    <!-- Show Controls Button (top right) -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 2202;">
+        <button class="top-btn open-btn" id="open-overlay">Show Controls</button>
+    </div>
+
+    <!-- Overlay structure -->
+    <div class="overlay" id="keyboardOverlay">
+        <div class="overlay-content">
+            <h2 class="overlay-title">Controls</h2>
+            <ul class="keyboard-controls">
+                <li><strong>Scroll:</strong> Zoom </li>
+                <li><strong>Left click drag:</strong> Rotate </li>
+                <li><strong>Right click drag:</strong> Pan </li>
+                <li><strong>Space:</strong> Re-center camera on Sun</li>
+                <li><strong>Backspace:</strong> Re-center camera to initial settings</li>
+                <li><strong>T:</strong> (T)rack selected orbit</li>
+                <li><strong>U:</strong> (U)ntrack selected orbit</li>
+                <li><strong>Q:</strong> Decrease precision for selecting orbits</li>
+                <li><strong>E:</strong> Increase precision for selecting orbits</li>
+            </ul>
+            <button class="close-btn" id="close-overlay" style="font-family: Verdana; font-size: large;">Close</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="time-container">
+            <div class="time-item" id="current-time" style="font-size: large;"></div>
+            <div class="time-item" id="timespeed" style="font-size: large;"></div>
+        </div>
+        <div class="time-control-panel">
+            <button class="time-control-button" id="fastbackward-button" onmouseover="swapImage(this, 'assets/icon-time-fastbackward-hover.png')" onmouseout="swapImage(this, 'assets/icon-time-fastbackward.png')">
+                <img src="assets/icon-time-fastbackward.png" alt="" width="198" height="128" class="time-control-icon">
+            </button>
+            <button class="time-control-button" id="backward-button" onmouseover="swapImage(this, 'assets/icon-time-backward-hover.png')" onmouseout="swapImage(this, 'assets/icon-time-backward.png')">
+                <img src="assets/icon-time-backward.png" alt="" width="128" height="128" class="time-control-icon">
+            </button>
+            <button class="time-control-button" id="now-button" onmouseover="swapImage(this, 'assets/icon-time-now-hover.png')" onmouseout="swapImage(this, 'assets/icon-time-now.png')">
+                <img src="assets/icon-time-now.png" alt="" width="128" height="128" class="time-control-icon">
+            </button>
+            <button class="time-control-button" id="forward-button" onmouseover="swapImage(this, 'assets/icon-time-forward-hover.png')" onmouseout="swapImage(this, 'assets/icon-time-forward.png')">
+                <img src="assets/icon-time-forward.png" alt="" width="128" height="128" class="time-control-icon">
+            </button>
+            <button class="time-control-button" id="fastforward-button" onmouseover="swapImage(this, 'assets/icon-time-fastforward-hover.png')" onmouseout="swapImage(this, 'assets/icon-time-fastforward.png')">
+                <img src="assets/icon-time-fastforward.png" alt="" width="198" height="128" class="time-control-icon">
+            </button>
+        </div>
+    </div>
+
+    <!-- Show/Hide Filter Panel Button (bottom right) -->
+    <div class="filter-toggle-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <button id="toggle-filter-panel" class="toggle-button">Show Filters</button>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="filter-panel hidden" id="main-controls">
+        <form>
+            <label>
+                <input type="checkbox" name="planets" value="Planet">
+                Planets
+            </label><br>
+            <label>
+                <input type="checkbox" name="dwarf planets" value="Dwarf planet">
+                Dwarf planets
+            </label><br>
+            <label>
+                <input type="checkbox" name="neos" value="NEO">
+                Near-Earth objects
+            </label><br>
+            <div>
+                <div class="slider-container">
+                    <div class="output" id="risk-lower-value">0</div>
+                    <div class="slider" id="risk-slider"></div>
+                    <div class="output" id="risk-upper-value">100</div>
+                </div>
+                <div class="slider-container">
+                    <div class="output" id="size-lower-value">0</div>
+                    <div class="slider" id="size-slider"></div>
+                    <div class="output" id="size-upper-value">100</div>
+                </div>
+                <div class="slider-container">
+                    <div class="output" id="a-lower-value">0</div>
+                    <div class="slider" id="a-slider"></div>
+                    <div class="output" id="a-upper-value">100</div>
+                </div>
+                <div class="slider-container">
+                    <div class="output" id="e-lower-value">0</div>
+                    <div class="slider" id="e-slider"></div>
+                    <div class="output" id="e-upper-value">100</div>
+                </div>
+            </div><br>
+            <label>
+                <input type="checkbox" name="showers" value="Shower">
+                Meteor showers and parent bodies
+            </label><br>
+            <label>
+        <!-- Removed Sporadic meteoroid complex option -->
+        </form>
+    </div>
+
+    <!-- Mini-Game Button (bottom left, right of chatbot icon) -->
+    <div style="position: fixed; left: 105px; bottom: 25px; z-index: 2202;">
+        <button id="mini-game-btn" class="top-btn">Mini-Game</button>
+    </div>
+
+    <!-- Chatbot Icon (bottom left) -->
+    <div id="chatbot-icon-wrapper" onclick="window.location.href='chatbot1.html'">
+        <img id="chatbot-icon" src="assets/chatboticon.png" alt="Chatbot Icon">
+    </div>
+
+    <!-- Chatbot Bubble Modal Above Icon (SVG speech bubble style) -->
+    <div id="chatbot-modal" class="chatbot-modal-hidden">
+        <div class="chatbot-bubble-svg">
+          <svg 
+            width="100%" 
+            height="100%" 
+            viewBox="0 0 170 90" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <path 
+                d="M10 10 
+                   h160 
+                   a10 10 0 0 1 10 10 
+                   v40 
+                   a10 10 0 0 1 -10 10 
+                   h-60 
+                   l-20 15 
+                   v-15 
+                   h-90 
+                   a10 10 0 0 1 -10 -10 
+                   v-40 
+                   a10 10 0 0 1 10 -10 z" 
+                stroke="#222" 
+                stroke-width="3" 
+                fill="#fff"
+            />
+        </svg>
+            <div class="chatbot-bubble-text">
+                👋 Try the Orrery Chatbot!
+            </div>
+        </div>
+    </div>
+
+    <script src="TimeUtils.js"></script>
+    <script type="module" src="main.js"></script>
+    <script>
+        // Animations for time controls
+        function swapImage(button, newimage) {
+            const img = button.querySelector('.time-control-icon');
+            img.src = newimage;
+        }
+
+        // Default filters for filter panel (all checked)
+        document.querySelector('input[name="planets"]').checked = true;
+        document.querySelector('input[name="neos"]').checked = false;
+        document.querySelector('input[name="dwarf planets"]').checked = false;
+        document.querySelector('input[name="showers"]').checked = false;
+
+        // Show/Hide filter panel logic
+        document.getElementById('toggle-filter-panel').addEventListener('click', function(event) {
+            const panel = document.getElementById('main-controls');
+            panel.classList.toggle('hidden');
+            if (panel.classList.contains('hidden')) {
+                this.textContent = 'Show Filters';
+            } else {
+                this.textContent = 'Hide Filters';
+            }
+            event.stopPropagation();
+        });
+
+        // Mini-Game button redirect
+        document.getElementById('mini-game-btn').onclick = function() {
+            window.location.href = 'game.html';
+        };
+
+        // Show SVG chat bubble modal above chatbot icon, fade out after 2 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('chatbot-modal');
+            setTimeout(function() {
+                modal.classList.remove('chatbot-modal-hidden');
+                modal.classList.add('chatbot-modal-visible');
+                setTimeout(function() {
+                    modal.classList.remove('chatbot-modal-visible');
+                    modal.classList.add('chatbot-modal-hidden');
+                }, 2000);
+            }, 1000);
+        });
+    </script>
+    <style>
+        .filter-panel.hidden {
+            display: none;
+        }
+        .filter-panel {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            padding: 18px 22px;
+            z-index: 999;
+            color: #fff;
+            min-width: 260px;
+        }
+        .filter-toggle-container .toggle-button,
+        .top-btn {
+            background: #444;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            font-family: Verdana, sans-serif;
+            transition: background 0.2s;
+        }
+        .filter-toggle-container .toggle-button:hover,
+        .top-btn:hover {
+            background: #666;
+        }
+        .planet-popout {
+            box-shadow: 0 0 24px 8px #ffd700, 0 0 8px 2px #fff inset;
+            border-radius: 50%;
+            transition: box-shadow 0.3s;
+            z-index: 9999;
+        }
+        #chatbot-icon-wrapper {
+            position: fixed;
+            left: 25px;
+            bottom: 25px;
+            width: 70px;
+            height: 70px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            transition: box-shadow 0.2s;
+        }
+        #chatbot-icon-wrapper:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+        }
+        #chatbot-icon {
+            width: 48px;
+            height: 48px;
+        }
+        #chatbot-modal {
+            position: fixed;
+            left: 25px;
+            bottom: 70px;
+            z-index: 2001;
+            width: 140px;
+            height: 70px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-start;
+            padding: 0;
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 1s;
+        }
+        .chatbot-modal-hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .chatbot-modal-visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+       .chatbot-bubble-svg {
+    position: relative;
+    width: 200px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chatbot-bubble-text {
+    position: absolute;
+    top: 20px; /* move text inside bubble */
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: Verdana, sans-serif;
+    font-size: 0.9rem;
+    color: #222;
+    pointer-events: none;
+    user-select: none;
+}
+
+    </style>
+</body>
+</html>

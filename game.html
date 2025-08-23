@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orrery Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+    body {
+      background-color: #00001a;
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .star {
+      position: absolute;
+      background-color: #fff;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: twinkle linear infinite;
+    }
+
+    .star.small { width: 1px; height: 1px; }
+    .star.medium { width: 2px; height: 2px; }
+    .star.large { width: 3px; height: 3px; }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 0.2; transform: scale(0.5); }
+    }
+
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 0 40px rgba(78, 205, 196, 0.4);
+      transition: all 0.3s ease;
+      max-width: 95%;
+    }
+
+    #timer {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #2ecc71;
+      margin-bottom: 10px;
+      height: 25px;
+      text-shadow: 0 0 10px #2ecc71;
+    }
+
+    canvas {
+      border: 2px solid #4ecdc4;
+      background-color: #000;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+      cursor: grab;
+      touch-action: none;
+      max-width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+    }
+
+    .game-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .game-controls button {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(145deg, #4ecdc4, #37a8a0);
+      color: #000;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.2);
+    }
+
+    .game-controls button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(78, 205, 196, 0.5);
+    }
+
+    .game-controls button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(78, 205, 196, 0.5);
+    }
+
+    #status-message {
+      margin-bottom: 10px;
+      font-size: 1.2em;
+      text-align: center;
+      height: 30px;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+      color: #4ecdc4;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .modal-content {
+      background: linear-gradient(145deg, #0f1c2d, #09101a);
+      padding: 40px;
+      border: 2px solid #4ecdc4;
+      border-radius: 15px;
+      box-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+      text-align: center;
+      max-width: 90%;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      color: #fff;
+      text-shadow: 0 0 10px #4ecdc4;
+    }
+
+    .modal-content p {
+      font-size: 1.1em;
+      color: #ddd;
+      margin-bottom: 20px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .modal-buttons button {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    #confirm-skip, #restart-game {
+      background: linear-gradient(145deg, #e74c3c, #c0392b);
+      color: #fff;
+    }
+
+    #confirm-skip:hover, #restart-game:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.5);
+    }
+
+    #cancel-skip, #close-modal {
+      background: linear-gradient(145deg, #2ecc71, #27ae60);
+      color: #fff;
+    }
+
+    #cancel-skip:hover, #close-modal:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5);
+    }
+
+    .back-btn-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .back-btn {
+      font-size: large;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background: #444;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Stars background -->
+  <div id="star-container"></div>
+
+  <div id="game-container">
+    <div id="status-message">Arrange the planets in their correct orbits!</div>
+    <div id="timer">00:00</div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="game-controls">
+      <button id="startGameBtn">Start Game</button>
+      <button id="skipGameBtn">Skip Game</button>
+      <button id="timerToggleBtn">Hide Timer</button>
+    </div>
+  </div>
+
+  <!-- Message Modal -->
+  <div id="messageModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modal-title"></h2>
+      <p id="modal-text"></p>
+      <div id="modal-buttons" class="modal-buttons">
+        <button id="close-modal">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skip Confirmation Modal -->
+  <div id="skipConfirmModal" class="modal">
+    <div class="modal-content">
+      <h2>Are you sure you want to skip?</h2>
+      <p>The game will end and the correct solution will be shown.</p>
+      <div class="modal-buttons">
+        <button id="confirm-skip">Yes, skip</button>
+        <button id="cancel-skip">No, keep playing</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="back-btn-container">
+    <button class="back-btn" id="back-btn">Back</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // --- DOM ELEMENTS ---
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const timerDisplay = document.getElementById('timer');
+      const statusMessage = document.getElementById('status-message');
+      const startGameBtn = document.getElementById('startGameBtn');
+      const skipGameBtn = document.getElementById('skipGameBtn');
+      const timerToggleBtn = document.getElementById('timerToggleBtn');
+      const messageModal = document.getElementById('messageModal');
+      const skipConfirmModal = document.getElementById('skipConfirmModal');
+      const closeModalBtn = document.getElementById('close-modal');
+      const confirmSkipBtn = document.getElementById('confirm-skip');
+      const cancelSkipBtn = document.getElementById('cancel-skip');
+      const modalTitle = document.getElementById('modal-title');
+      const modalText = document.getElementById('modal-text');
+      const starContainer = document.getElementById('star-container');
+
+      // --- GAME STATE & CONFIG ---
+      let gameState = 'idle'; // idle, running, finished, skipped
+      let planets = [];
+      let sun = { x: 0, y: 0, radius: 0, color: '#FFD700' };
+      let scaleFactor = 1;
+      let selectedPlanet = null;
+      let isDragging = false;
+      let offset = { x: 0, y: 0 };
+
+      // Timer variables
+      let timerInterval;
+      let seconds = 0;
+      let timerVisible = true;
+
+      const planetData = [
+        { name: 'Mercury', color: '#A9A9A9', radius: 0.032, orbit: 0.16 },
+        { name: 'Venus', color: '#FFA500', radius: 0.038, orbit: 0.24 },
+        { name: 'Earth', color: '#4682B4', radius: 0.040, orbit: 0.33 },
+        { name: 'Mars', color: '#FF4500', radius: 0.036, orbit: 0.43 },
+        { name: 'Jupiter', color: '#D2B48C', radius: 0.08, orbit: 0.56 },
+        { name: 'Saturn', color: '#F0E68C', radius: 0.07, orbit: 0.70, hasRing: true },
+        { name: 'Uranus', color: '#ADD8E6', radius: 0.05, orbit: 0.83 },
+        { name: 'Neptune', color: '#4169E1', radius: 0.048, orbit: 0.95 },
+      ];
+
+      // --- INITIALIZATION ---
+
+      function createStars() {
+          const numStars = 100;
+          let starsHTML = '';
+          for (let i = 0; i < numStars; i++) {
+              const size = ['small', 'medium', 'large'][Math.floor(Math.random() * 3)];
+              const x = Math.random() * 100;
+              const y = Math.random() * 100;
+              const duration = Math.random() * 5 + 3;
+              starsHTML += `<div class="star ${size}" style="top: ${y}%; left: ${x}%; animation-duration: ${duration}s;"></div>`;
+          }
+          starContainer.innerHTML = starsHTML;
+      }
+
+      function setupCanvas() {
+        const container = document.getElementById('game-container');
+        const size = Math.min(container.clientWidth * 0.9, window.innerHeight * 0.6);
+        canvas.width = size * (16/9);
+        canvas.height = size;
+        
+        scaleFactor = canvas.height / 2;
+        sun.x = canvas.width / 3.2; 
+        sun.y = canvas.height / 2;
+        sun.radius = scaleFactor * 0.1;
+      }
+      
+      function initGame() {
+        gameState = 'idle';
+        planets = [];
+        planetData.forEach((p, i) => {
+          const planet = { ...p };
+          planet.id = i;
+          planet.radius = planet.radius * scaleFactor;
+          planet.orbit = planet.orbit * scaleFactor;
+
+          const planetsPerColumn = 4;
+          const column = Math.floor(i / planetsPerColumn);
+          const rowIndex = i % planetsPerColumn;
+
+          planet.x = canvas.width * (0.83 + column * 0.12);
+          planet.y = (canvas.height / (planetsPerColumn + 1)) * (rowIndex + 1);
+
+          planet.startX = planet.x;
+          planet.startY = planet.y;
+          planet.isPlaced = false;
+          planet.placedOrbit = null;
+          planet.previousOrbit = null;
+          planet.isReturning = false;
+          planet.angle = Math.random() * Math.PI * 2;
+          planets.push(planet);
+        });
+        resetTimer();
+        statusMessage.textContent = 'Arrange the planets in their correct orbits!';
+        startGameBtn.textContent = 'Start Game';
+      }
+
+      // --- GAME LOOP ---
+
+      function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        planets.forEach(p => {
+            if (p.isReturning) {
+                const targetX = p.previousOrbit ? sun.x + Math.cos(p.angle) * p.previousOrbit : p.startX;
+                const targetY = p.previousOrbit ? sun.y + Math.sin(p.angle) * p.previousOrbit : p.startY;
+                const dx = targetX - p.x;
+                const dy = targetY - p.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 1) {
+                    p.x = targetX;
+                    p.y = targetY;
+                    p.isReturning = false;
+                    if (p.previousOrbit) {
+                        p.isPlaced = true;
+                        p.placedOrbit = p.previousOrbit;
+                        p.previousOrbit = null;
+                    }
+                } else {
+                    p.x += dx * 0.1;
+                    p.y += dy * 0.1;
+                }
+            }
+        });
+        
+        if (gameState === 'finished' || gameState === 'skipped') {
+          planets.forEach(p => {
+            if (p.isPlaced) {
+              p.angle += 0.005 / (p.placedOrbit / scaleFactor);
+              p.x = sun.x + Math.cos(p.angle) * p.placedOrbit;
+              p.y = sun.y + Math.sin(p.angle) * p.placedOrbit;
+            }
+          });
+        }
+        
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+
+      // --- DRAWING FUNCTIONS ---
+
+      function draw() {
+        drawOrbits();
+        drawSun();
+        drawPlanets();
+        drawPlanetNames();
+      }
+
+      function drawSun() {
+        ctx.fillStyle = sun.color;
+        ctx.shadowColor = sun.color;
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.arc(sun.x, sun.y, sun.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      function drawOrbits() {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        planetData.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(sun.x, sun.y, p.orbit * scaleFactor, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+      }
+
+      function drawPlanets() {
+        planets.forEach(p => {
+          ctx.globalAlpha = (p === selectedPlanet) ? 0.7 : 1.0;
+          const currentRadius = (p === selectedPlanet) ? p.radius * 1.2 : p.radius;
+
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, currentRadius, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.globalAlpha = 1.0;
+
+          if (p.hasRing) {
+            drawPlanetRing(p);
+          }
+          ctx.shadowBlur = 0;
+        });
+      }
+
+      function drawPlanetNames() {
+        const fontSize = scaleFactor * 0.065;
+        ctx.font = `700 ${fontSize}px Verdana`; // Changed from Orbitron to Verdana
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        planets.forEach(p => {
+          const text = p.name;
+          const textMetrics = ctx.measureText(text);
+          const textWidth = textMetrics.width;
+          const textHeight = fontSize;
+          const x = p.x;
+          const y = p.y - p.radius - (textHeight / 2) - 18;
+
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+          ctx.beginPath();
+          ctx.roundRect(x - textWidth / 2 - 8, y - textHeight / 2 - 4, textWidth + 16, textHeight + 8, 8);
+          ctx.fill();
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillText(text, x, y);
+        });
+      }
+
+      function drawPlanetRing(planet) {
+        ctx.strokeStyle = '#A0522D';
+        ctx.lineWidth = planet.radius * 0.2;
+        ctx.beginPath();
+        ctx.ellipse(planet.x, planet.y, planet.radius * 1.8, planet.radius * 0.8, Math.PI / 6, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // --- GAME LOGIC ---
+
+      function startGame() {
+        initGame();
+        gameState = 'running';
+        startTimer();
+        statusMessage.textContent = 'The clock is ticking!';
+        startGameBtn.textContent = 'Restart Game';
+      }
+
+      function skipGame() {
+        stopTimer();
+        gameState = 'skipped';
+        statusMessage.textContent = 'Here is the correct solution.';
+        planets.forEach(p => {
+          p.isPlaced = true;
+          p.placedOrbit = p.orbit;
+          p.x = sun.x + p.placedOrbit;
+          p.y = sun.y;
+        });
+        startGameBtn.textContent = 'Play Again';
+      }
+
+      function checkGameCompletion() {
+        const placedCount = planets.filter(p => p.isPlaced).length;
+        statusMessage.textContent = `${placedCount} of ${planets.length} planets placed.`;
+        
+        if (placedCount === planets.length) {
+          gameState = 'finished';
+          stopTimer();
+          calculateScore();
+          startGameBtn.textContent = 'Play Again';
+        }
+      }
+
+      function calculateScore() {
+        let correctCount = 0;
+        planets.forEach(planet => {
+            if (Math.abs(planet.placedOrbit - planet.orbit) < 1) {
+                correctCount++;
+            }
+        });
+        showMessage(
+            'Game Over!', 
+            `You placed ${correctCount} of ${planets.length} planets correctly in ${formatTime(seconds)}.`
+        );
+      }
+
+      // --- TIMER FUNCTIONS ---
+
+      function startTimer() {
+        seconds = 0;
+        updateTimerDisplay();
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          seconds++;
+          updateTimerDisplay();
+        }, 1000);
+      }
+
+      function stopTimer() {
+        clearInterval(timerInterval);
+      }
+
+      function resetTimer() {
+        stopTimer();
+        seconds = 0;
+        updateTimerDisplay();
+      }
+
+      function formatTime(s) {
+        const minutes = Math.floor(s / 60).toString().padStart(2, '0');
+        const seconds = (s % 60).toString().padStart(2, '0');
+        return `${minutes}:${seconds}`;
+      }
+
+      function updateTimerDisplay() {
+        timerDisplay.textContent = formatTime(seconds);
+      }
+      
+      function toggleTimer() {
+        timerVisible = !timerVisible;
+        timerDisplay.style.visibility = timerVisible ? 'visible' : 'hidden';
+        timerToggleBtn.textContent = timerVisible ? 'Hide Timer' : 'Show Timer';
+      }
+
+      // --- EVENT HANDLERS ---
+
+      function getEventCoordinates(e) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : null;
+        return {
+            x: (touch ? touch.clientX : e.clientX) - rect.left,
+            y: (touch ? touch.clientY : e.clientY) - rect.top
+        };
+      }
+
+      function handleDragStart(e) {
+        if (gameState !== 'running') return;
+        e.preventDefault();
+        const pos = getEventCoordinates(e);
+
+        for (let i = planets.length - 1; i >= 0; i--) {
+          const p = planets[i];
+          if (p.isReturning) continue;
+          
+          const dist = Math.hypot(p.x - pos.x, p.y - pos.y);
+          if (dist < p.radius + 20) {
+            if (p.isPlaced) {
+                p.previousOrbit = p.placedOrbit;
+                p.isPlaced = false;
+                p.placedOrbit = null;
+            }
+            selectedPlanet = p;
+            isDragging = true;
+            canvas.style.cursor = 'grabbing';
+            offset.x = p.x - pos.x;
+            offset.y = p.y - pos.y;
+            checkGameCompletion();
+            return;
+          }
+        }
+      }
+
+      function handleDragMove(e) {
+        if (!isDragging || !selectedPlanet) return;
+        e.preventDefault();
+        const pos = getEventCoordinates(e);
+        selectedPlanet.x = pos.x + offset.x;
+        selectedPlanet.y = pos.y + offset.y;
+      }
+
+      function handleDragEnd(e) {
+        if (!isDragging || !selectedPlanet) return;
+        e.preventDefault();
+        
+        const distFromSun = Math.hypot(selectedPlanet.x - sun.x, selectedPlanet.y - sun.y);
+        const tolerance = 30; 
+        let placedSuccessfully = false;
+
+        let closestOrbit = null;
+        let minOrbitDist = Infinity;
+
+        planetData.forEach(pData => {
+            const orbitRadius = pData.orbit * scaleFactor;
+            const distToOrbit = Math.abs(distFromSun - orbitRadius);
+            if (distToOrbit < tolerance && distToOrbit < minOrbitDist) {
+                minOrbitDist = distToOrbit;
+                closestOrbit = orbitRadius;
+            }
+        });
+
+        if (closestOrbit !== null) {
+          const orbitTakenBy = planets.find(p => p.isPlaced && p.placedOrbit === closestOrbit);
+          
+          if (!orbitTakenBy) {
+            // --- Place planet in empty orbit ---
+            selectedPlanet.isPlaced = true;
+            selectedPlanet.placedOrbit = closestOrbit;
+            placedSuccessfully = true;
+            selectedPlanet.previousOrbit = null;
+            selectedPlanet.angle = Math.atan2(selectedPlanet.y - sun.y, selectedPlanet.x - sun.x);
+            selectedPlanet.x = sun.x + Math.cos(selectedPlanet.angle) * selectedPlanet.placedOrbit;
+            selectedPlanet.y = sun.y + Math.sin(selectedPlanet.angle) * selectedPlanet.placedOrbit;
+            checkGameCompletion();
+          } else if (selectedPlanet.previousOrbit) {
+            // --- Swap planets ---
+            // Move the planet that was already there to the dragged planet's old spot
+            orbitTakenBy.isPlaced = true;
+            orbitTakenBy.placedOrbit = selectedPlanet.previousOrbit;
+            orbitTakenBy.previousOrbit = null;
+            orbitTakenBy.angle = Math.atan2(selectedPlanet.y - sun.y, selectedPlanet.x - sun.x); // Use same angle for smooth swap
+            orbitTakenBy.x = sun.x + Math.cos(orbitTakenBy.angle) * orbitTakenBy.placedOrbit;
+            orbitTakenBy.y = sun.y + Math.sin(orbitTakenBy.angle) * orbitTakenBy.placedOrbit;
+
+            // Place the dragged planet in the new spot
+            selectedPlanet.isPlaced = true;
+            selectedPlanet.placedOrbit = closestOrbit;
+            placedSuccessfully = true;
+            selectedPlanet.previousOrbit = null;
+            selectedPlanet.angle = Math.atan2(selectedPlanet.y - sun.y, selectedPlanet.x - sun.x);
+            selectedPlanet.x = sun.x + Math.cos(selectedPlanet.angle) * selectedPlanet.placedOrbit;
+            selectedPlanet.y = sun.y + Math.sin(selectedPlanet.angle) * selectedPlanet.placedOrbit;
+            checkGameCompletion();
+          }
+        }
+
+        if (!placedSuccessfully) {
+            selectedPlanet.isReturning = true;
+        }
+
+        isDragging = false;
+        selectedPlanet = null;
+        canvas.style.cursor = 'grab';
+      }
+
+      function handleResize() {
+        setupCanvas();
+        initGame();
+        draw();
+      }
+
+      // --- MODAL FUNCTIONS ---
+
+      function showModal(modalElement) {
+        modalElement.style.display = 'flex';
+      }
+
+      function hideModal(modalElement) {
+        modalElement.style.display = 'none';
+      }
+
+      function showMessage(title, text) {
+        modalTitle.textContent = title;
+        modalText.textContent = text;
+        showModal(messageModal);
+      }
+
+      // --- EVENT LISTENERS ---
+      startGameBtn.addEventListener('click', startGame);
+      timerToggleBtn.addEventListener('click', toggleTimer);
+      
+      skipGameBtn.addEventListener('click', () => showModal(skipConfirmModal));
+      confirmSkipBtn.addEventListener('click', () => {
+        hideModal(skipConfirmModal);
+        skipGame();
+      });
+      cancelSkipBtn.addEventListener('click', () => hideModal(skipConfirmModal));
+      closeModalBtn.addEventListener('click', () => {
+          hideModal(messageModal);
+          if (gameState === 'finished' || gameState === 'skipped') {
+              initGame();
+          }
+      });
+
+      // Mouse Events
+      canvas.addEventListener('mousedown', handleDragStart);
+      canvas.addEventListener('mousemove', handleDragMove);
+      canvas.addEventListener('mouseup', handleDragEnd);
+      canvas.addEventListener('mouseleave', handleDragEnd);
+
+      // Touch Events
+      canvas.addEventListener('touchstart', handleDragStart, { passive: false });
+      canvas.addEventListener('touchmove', handleDragMove, { passive: false });
+      canvas.addEventListener('touchend', handleDragEnd);
+      canvas.addEventListener('touchcancel', handleDragEnd);
+
+      window.addEventListener('resize', handleResize);
+
+      // --- INITIAL SETUP CALLS ---
+      createStars();
+      setupCanvas();
+      initGame();
+      gameLoop();
+
+      document.getElementById('back-btn').onclick = function() {
+          window.location.href = 'orrery.html';
+      };
+    });
+  </script>
+</body>
+</html>
