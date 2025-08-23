@@ -14,6 +14,10 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    console.log('Gemini API response:', JSON.stringify(data, null, 2));
+    if (!data.candidates) {
+      console.error('Gemini API error or unexpected response:', data);
+    }
     res.status(200).json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
