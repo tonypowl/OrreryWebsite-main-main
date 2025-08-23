@@ -21,7 +21,7 @@ const NEO_COLOR = 0xFFFFFF;
 const NEO_RADIUS = 0.01;
 const MAX_VISIBLE_NEOS = 999;
 const MAX_VISIBLE_SHOWERS = 999;
-
+  
 const MOUSE_MIN_MOVE_CLICK = 0.005;
 
 const SUNOBLIQUITY = 7.25; // degrees
