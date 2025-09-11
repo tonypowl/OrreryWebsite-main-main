@@ -1,52 +1,46 @@
-Orrery Website
+**#Orrery Website**
 
 An interactive web application that simulates an orrery (a model of the solar system) with additional features such as a Near-Earth Object (NEO) tracker, a mini-game, and a Gemini-powered chatbot.
 
-Features
-Interactive Orrery
+---
 
-Real-time 3D simulation of the solar system with smooth WebGL rendering.
+##Features
+###Interactive Orrery
+- Real-time 3D simulation of the solar system with smooth WebGL rendering.
 
-NEO Tracker
+###NEO Tracker
+- Visualizes near-Earth objects and their orbits.
 
-Visualizes near-Earth objects and their orbits.
+###Mini-Game
+- A space-themed game integrated into the interface.
 
-Mini-Game
+###Gemini Chatbot
+- An AI-powered assistant that answers astronomy-related questions and enhances the learning experience.
 
-A space-themed game integrated into the interface.
+##Screenshots
 
-Gemini Chatbot
-
-An AI-powered assistant that answers astronomy-related questions and enhances the learning experience.
-
-Screenshots
-
-Add your screenshots in this section for better visualization.
-
-Orrery view
+###Orrery view
 
 
-Mini-game
+###Mini-game
 
 
-Gemini chatbot
+###Gemini chatbot
 
 
-Tech Stack
+##Tech Stack
 
-React 18 + TypeScript
+- React 18 + TypeScript
+- Vite
+- WebGL and Three.js (for the orrery)
+- Gemini API (chatbot integration)
 
-Vite
-
-WebGL / Three.js (for the orrery)
-
-Gemini API (chatbot integration)
-
-Getting Started
-Prerequisites
+##Getting Started
+###Prerequisites
 
 Node.js (v18 or later)
 
 npm, yarn, or pnpm
 
 Installation
+
