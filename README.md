@@ -41,14 +41,14 @@ An interactive web application that simulates an orrery (a model of the solar sy
 ### Prerequisites
 
 Node.js (v18 or later)
-
-npm, yarn, or pnpm
+npm
 
 ## Installation
-git clone https://github.com/tonypowl/orrery-website.git
-cd orrery-website
-npm install
-npm run dev
+1. git clone https://github.com/tonypowl/orrery-website.git
+2. cd orrery-website
+3. npm install
+4. npm run dev
+
 
 
 
