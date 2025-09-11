@@ -2,7 +2,6 @@
 
 An interactive web application that simulates an orrery (a model of the solar system) with additional features such as a Near-Earth Object (NEO) tracker, a mini-game, and a Gemini-powered chatbot.
 
----
 
 ## Features
 ### Interactive Orrery
@@ -50,6 +49,7 @@ git clone https://github.com/tonypowl/orrery-website.git
 cd orrery-website
 npm install
 npm run dev
+
 
 
 
