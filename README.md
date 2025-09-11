@@ -1,4 +1,4 @@
-**#Orrery Website**
+** # Orrery Website **
 
 An interactive web application that simulates an orrery (a model of the solar system) with additional features such as a Near-Earth Object (NEO) tracker, a mini-game, and a Gemini-powered chatbot.
 
@@ -43,4 +43,5 @@ Node.js (v18 or later)
 npm, yarn, or pnpm
 
 Installation
+
 
