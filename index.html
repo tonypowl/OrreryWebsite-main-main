@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ...existing code... -->
+</head>
+<body>
+  <!-- Video splash overlay -->
+  <div id="video-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:black;">
+    <video id="splash-video" src="orreryfront.mp4" autoplay muted playsinline style="width:100vw;height:100vh;object-fit:cover;"></video>
+    <audio id="splash-audio" src="orreryfront.mp3" autoplay loop></audio>
+  </div>
+ <div id="scroll-indicator">
+    <span class="arrow"></span>
+  </div>
+  
+<script>
+  // Wait for the video to end, then redirect
+  document.getElementById('splash-video').playbackRate = 1.25;
+  document.getElementById('splash-video').addEventListener('ended', function() {
+    window.location.href = 'orrery.html';
+  });
+  document.getElementById('video-overlay').addEventListener('click', function() {
+    window.location.href = 'orrery.html';
+  });
+</script>
+  <!-- ...existing code (main website content)... -->
+</body>
+<style>
+  #scroll-indicator {
+    position: fixed;
+    left: 50%;
+    bottom: 40px;
+    transform: translateX(-50%);
+    z-index: 100;
+    pointer-events: none;
+  }
+  .arrow {
+    display: block;
+    width: 30px;
+    height: 30px;
+    border-left: 4px solid #fff;
+    border-bottom: 4px solid #fff;
+    transform: rotate(-45deg);
+    margin: 0 auto;
+    animation: bounce 1s infinite;
+    opacity: 0.7;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0) rotate(-45deg);}
+    50% { transform: translateY(15px) rotate(-45deg);}
+  }
+</style>
+
+
+<!-- ...existing code... -->
+<script src="script.js"></script>
+</html>

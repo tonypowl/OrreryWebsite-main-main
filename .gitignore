@@ -2,4 +2,3 @@
 .DS_Store
 # ignore vscode
 .vscode/
-.env.local
